@@ -1,0 +1,45 @@
+.admin-page {
+  min-height: 100vh;
+  padding: 0 28px 70px;
+  background: #fffaf7;
+  color: #2d2d2d;
+  font-family: 'Nunito', sans-serif;
+}
+
+.admin-header {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(45,45,45,.12);
+}
+
+.admin-header__back { color: inherit; font-size: 12px; font-weight: 900; text-decoration: none; }
+.admin-header__label { color: #716a68; font-size: 11px; }
+.admin-content { width: min(100%, 1040px); margin: 70px auto 0; }
+.admin-eyebrow { margin: 0 0 8px; color: #9a5a67; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+.admin-content h1 { margin: 0; font: 500 44px/1.1 'Fredoka', sans-serif; }
+.admin-description { color: #716a68; font-size: 13px; }
+.admin-stats { display: flex; gap: 45px; margin: 35px 0; }
+.admin-stats div { display: grid; gap: 4px; }
+.admin-stats strong { font: 500 31px 'Fredoka', sans-serif; }
+.admin-stats span { color: #716a68; font-size: 10px; }
+.admin-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; border-top: 1px solid rgba(45,45,45,.15); border-bottom: 1px solid rgba(45,45,45,.15); }
+.admin-toolbar p, .admin-empty { color: #716a68; font-size: 11px; line-height: 1.5; }
+.admin-toolbar > div { display: flex; gap: 8px; flex-shrink: 0; }
+.admin-toolbar button { min-height: 36px; padding: 0 12px; border: 1px solid rgba(45,45,45,.3); border-radius: 3px; background: #fffdfb; color: #2d2d2d; cursor: pointer; font-size: 10px; font-weight: 900; }
+.admin-toolbar button:disabled { cursor: default; opacity: .45; }
+.admin-empty { padding: 35px 0; text-align: center; }
+.admin-table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 13px 10px; border-bottom: 1px solid rgba(45,45,45,.12); font-size: 11px; vertical-align: top; }
+th { color: #716a68; font-size: 9px; text-transform: uppercase; }
+
+@media (max-width: 680px) {
+  .admin-page { padding: 0 18px 45px; }
+  .admin-content { margin-top: 45px; }
+  .admin-content h1 { font-size: 38px; }
+  .admin-toolbar { align-items: stretch; flex-direction: column; }
+  .admin-toolbar > div { flex-wrap: wrap; }
+  th, td { min-width: 95px; }
+}

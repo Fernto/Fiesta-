@@ -1,8 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InvitationData, InvitationPhoto } from './models/invitation-data.model';
 import { InvitationService } from './invitation.service';
+import { AttendanceRecord, AttendanceService } from './attendance.service';
 
 interface Countdown {
   days: number;
@@ -24,7 +25,13 @@ export class InvitationComponent implements OnInit, OnDestroy {
   adultCount = 1;
   childCount = 0;
   birthdayMessage = '';
-  currentPhotoIndex = 0;
+  activeFaceIndex = 0;
+  activeCollageIndex = 0;
+  collageColumns: InvitationPhoto[][] = [];
+  lightboxPhoto: InvitationPhoto | null = null;
+  readonly collageTilts = [-4, 3, -2, 5, 2, -5, 4, -3, -6, 1, 5, -2, 3, -4, 2, -1];
+
+  @ViewChild('galleryLightbox') private galleryLightbox?: ElementRef<HTMLDialogElement>;
 
   /** Estado del botón "Compartir", para dar feedback cuando se copia el link */
   shareStatus: 'idle' | 'copied' | 'unsupported' = 'idle';
@@ -32,6 +39,7 @@ export class InvitationComponent implements OnInit, OnDestroy {
   countdown: Countdown = { days: 0, hours: 0, minutes: 0, finished: false };
 
   private countdownTimer?: ReturnType<typeof setInterval>;
+  private animationTimer?: ReturnType<typeof setInterval>;
   private readonly dateFormatter = new Intl.DateTimeFormat('es-MX', {
     weekday: 'long',
     day: 'numeric',
@@ -44,8 +52,12 @@ export class InvitationComponent implements OnInit, OnDestroy {
     hour12: true
   });
 
-  constructor(private readonly invitationService: InvitationService) {
+  constructor(
+    private readonly invitationService: InvitationService,
+    private readonly attendanceService: AttendanceService
+  ) {
     this.invitation = this.invitationService.getInvitation();
+    this.collageColumns = this.crearColumnasCollage(this.invitation.galleryPhotos);
   }
 
   ngOnInit(): void {
@@ -53,11 +65,25 @@ export class InvitationComponent implements OnInit, OnDestroy {
     // Se actualiza cada minuto; para una cuenta regresiva de segundos bastaría
     // bajar el intervalo, pero por minuto es suficiente para este caso de uso.
     this.countdownTimer = setInterval(() => this.actualizarCountdown(), 60_000);
+    const prefiereMovimientoReducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefiereMovimientoReducido && (this.collageColumns.length || this.invitation.facePhasePhotos.length > 1)) {
+      this.animationTimer = setInterval(() => {
+        if (this.collageColumns.length) {
+          this.activeCollageIndex = (this.activeCollageIndex + 1) % 16;
+        }
+        if (this.invitation.facePhasePhotos.length > 1) {
+          this.activeFaceIndex = (this.activeFaceIndex + 1) % this.invitation.facePhasePhotos.length;
+        }
+      }, 3000);
+    }
   }
 
   ngOnDestroy(): void {
     if (this.countdownTimer) {
       clearInterval(this.countdownTimer);
+    }
+    if (this.animationTimer) {
+      clearInterval(this.animationTimer);
     }
   }
 
@@ -69,15 +95,33 @@ export class InvitationComponent implements OnInit, OnDestroy {
     return this.timeFormatter.format(this.invitation.eventDate);
   }
 
-  get activePhoto(): InvitationPhoto | null {
-    return this.invitation.galleryPhotos[this.currentPhotoIndex] ?? null;
+  private crearColumnasCollage(photos: InvitationPhoto[]): InvitationPhoto[][] {
+    if (!photos.length) return [];
+    const tiles = Array.from({ length: 16 }, (_, index) => photos[index % photos.length]);
+    return Array.from({ length: 4 }, (_, column) => tiles.slice(column * 4, column * 4 + 4));
   }
 
-  cambiarFoto(direccion: number): void {
-    const totalFotos = this.invitation.galleryPhotos.length;
-    if (totalFotos < 2) return;
+  abrirLightbox(photo: InvitationPhoto): void {
+    this.lightboxPhoto = photo;
+    this.galleryLightbox?.nativeElement.showModal();
+  }
 
-    this.currentPhotoIndex = (this.currentPhotoIndex + direccion + totalFotos) % totalFotos;
+  cerrarLightbox(): void {
+    this.galleryLightbox?.nativeElement.close();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  cerrarLightboxConEscape(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.galleryLightbox?.nativeElement.open) {
+      event.preventDefault();
+      this.cerrarLightbox();
+    }
+  }
+
+  cerrarLightboxSiFondo(event: MouseEvent): void {
+    if (event.target === this.galleryLightbox?.nativeElement) {
+      this.cerrarLightbox();
+    }
   }
 
   /**
@@ -102,6 +146,19 @@ export class InvitationComponent implements OnInit, OnDestroy {
     }
 
     return `https://wa.me/${this.invitation.whatsappPhone}?text=${encodeURIComponent(lineas.join('\n'))}`;
+  }
+
+  confirmarAsistencia(): void {
+    const record: AttendanceRecord = {
+      name: this.guestName.trim(),
+      adults: Number(this.adultCount) || 0,
+      children: Number(this.childCount) || 0,
+      message: this.birthdayMessage.trim(),
+      date: new Date().toISOString()
+    };
+
+    this.attendanceService.agregar(record);
+    window.open(this.whatsappUrl, '_blank', 'noopener,noreferrer');
   }
 
   /**
@@ -181,4 +238,5 @@ export class InvitationComponent implements OnInit, OnDestroy {
       finished: false
     };
   }
+
 }

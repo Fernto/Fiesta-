@@ -23,14 +23,32 @@ export class InvitationService {
         address: 'Dirección por confirmar',
         mapsUrl: ''
       },
-      galleryPhotos: [],
+      galleryPhotos: Array.from({ length: 15 }, (_, index) => {
+        const photoNumber = index + 1;
+        const thumbnailSrcSet = [160, 320, 640]
+          .map((width) => `assets/fotos/miniaturas/galeria/${photoNumber}-${width}.jpg ${width}w`)
+          .join(', ');
+
+        return {
+          src: `assets/fotos/galeria/${photoNumber}.jpg`,
+          thumbnailSrcSet,
+          alt: `Alana, recuerdo familiar ${photoNumber}`,
+          caption: ''
+        };
+      }),
+      facePhasePhotos: [
+        { src: 'assets/fotos/caritas/1-removebg-preview.png', alt: 'Carita de Alana, fase 1', caption: '' },
+        { src: 'assets/fotos/caritas/5-removebg-preview.png', alt: 'Carita de Alana, fase 2', caption: '' },
+        { src: 'assets/fotos/caritas/10-removebg-preview.png', alt: 'Carita de Alana, fase 3', caption: '' }
+      ],
       venueName: 'Salón por confirmar',
       address: 'Dirección por confirmar',
       mapsUrl: '',
       welcomeMessage: 'Acompáñanos a celebrar una tarde llena de juegos, pastel y mucho cariño.',
       parentsNames: [],
       whatsappPhone: '',
-      childPhotoUrl: 'assets/crowned-kitten.jpg',
+      childPhotoUrl: 'assets/fotos/galeria/3.jpg',
+      childPhotoSrcSet: 'assets/fotos/miniaturas/galeria/3-320.jpg 320w, assets/fotos/miniaturas/galeria/3-640.jpg 640w',
       dressCode: 'Colores pastel y ropa cómoda para jugar',
       giftSuggestion: 'Un cuento infantil (opcional, tu compañía es el mejor regalo)'
     };

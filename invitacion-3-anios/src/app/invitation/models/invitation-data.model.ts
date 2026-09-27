@@ -27,6 +27,9 @@ export interface InvitationData {
   /** Fotos personales que se muestran en el carrusel */
   galleryPhotos: InvitationPhoto[];
 
+  /** Tres fotos para la animación de fases de la festejada */
+  facePhasePhotos: InvitationPhoto[];
+
   /** Nombre del salón, jardín o lugar donde será el festejo */
   venueName: string;
 
@@ -51,6 +54,9 @@ export interface InvitationData {
   /** URL de una foto del festejado/a para el círculo de la portada (opcional) */
   childPhotoUrl?: string;
 
+  /** Fuentes responsivas para la foto de portada */
+  childPhotoSrcSet?: string;
+
   /** Sugerencia de vestimenta, ej. "Colores pastel, ropa cómoda" (opcional) */
   dressCode?: string;
 
@@ -67,6 +73,7 @@ export interface InvitationEvent {
 
 export interface InvitationPhoto {
   src: string;
+  thumbnailSrcSet?: string;
   alt: string;
   caption: string;
 }

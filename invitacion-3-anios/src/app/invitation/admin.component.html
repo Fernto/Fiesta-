@@ -1,0 +1,41 @@
+<main class="admin-page">
+  <header class="admin-header">
+    <a class="admin-header__back" href="/" aria-label="Volver a la invitación">← Invitación</a>
+    <p class="admin-header__label">Alana · Organización</p>
+  </header>
+
+  <section class="admin-content" aria-labelledby="admin-title">
+    <p class="admin-eyebrow">Gestión de organización</p>
+    <h1 id="admin-title">Asistencia</h1>
+    <p class="admin-description">Resumen de las confirmaciones registradas en este navegador.</p>
+
+    <div class="admin-stats" aria-live="polite">
+      <div><strong>{{ records.length }}</strong><span>confirmaciones</span></div>
+      <div><strong>{{ totalAttendees }}</strong><span>asistentes estimados</span></div>
+    </div>
+
+    <div class="admin-toolbar">
+      <p>Los registros locales no se sincronizan con los dispositivos de tus invitados.</p>
+      <div>
+        <button type="button" (click)="exportRecords()" [disabled]="!records.length">Descargar CSV</button>
+        <button type="button" (click)="clearRecords()" [disabled]="!records.length">Borrar registros</button>
+      </div>
+    </div>
+
+    <p *ngIf="!records.length" class="admin-empty">Todavía no hay confirmaciones en este dispositivo.</p>
+    <div *ngIf="records.length" class="admin-table-wrap">
+      <table>
+        <thead><tr><th>Invitado</th><th>Adultos</th><th>Niños</th><th>Mensaje</th><th>Fecha</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let record of records">
+            <td>{{ record.name }}</td>
+            <td>{{ record.adults }}</td>
+            <td>{{ record.children }}</td>
+            <td>{{ record.message || '—' }}</td>
+            <td>{{ record.date | date:'short' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
