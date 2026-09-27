@@ -1,4 +1,4 @@
 [build]
   base = "invitacion-3-anios"
   command = "npm run build"
-  publish = "dist/invitacion-3-anios"
+  publish = "dist/invitacion-3-anios/browser"
