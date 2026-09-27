@@ -34,7 +34,7 @@
 
       <div class="admin-form-section">
         <h2>Misa de Acción de Gracias</h2>
-        <label class="admin-field" for="ceremonyTime"><span>Hora</span><input id="ceremonyTime" name="ceremonyTime" type="text" maxlength="80" [(ngModel)]="settings.ceremony.time" /></label>
+        <label class="admin-field" for="ceremonyTime"><span>Hora de la misa</span><input id="ceremonyTime" name="ceremonyTime" type="time" step="900" [(ngModel)]="settings.ceremony.time" /></label>
         <label class="admin-field" for="ceremonyVenue"><span>Templo</span><input id="ceremonyVenue" name="ceremonyVenue" type="text" maxlength="180" [(ngModel)]="settings.ceremony.venueName" /></label>
         <label class="admin-field" for="ceremonyAddress"><span>Dirección</span><input id="ceremonyAddress" name="ceremonyAddress" type="text" maxlength="180" [(ngModel)]="settings.ceremony.address" /></label>
         <label class="admin-field" for="ceremonyMaps"><span>Enlace de Google Maps</span><input id="ceremonyMaps" name="ceremonyMaps" type="url" placeholder="https://maps.app.goo.gl/..." [(ngModel)]="settings.ceremony.mapsUrl" /></label>
@@ -62,11 +62,19 @@
       <div class="admin-stats" aria-live="polite">
         <div><strong>{{ records.length }}</strong><span>confirmaciones</span></div>
         <div><strong>{{ totalAttendees }}</strong><span>asistentes</span></div>
+        <div><strong>{{ ceremonyAttendees }}</strong><span>en misa</span></div>
+        <div><strong>{{ partyAttendees }}</strong><span>en fiesta</span></div>
       </div>
+
+      <p *ngIf="newAttendanceNotice" class="admin-notice" role="status">{{ newAttendanceNotice }}</p>
+      <p *ngIf="error" class="admin-error" role="alert">{{ error }}</p>
 
       <div class="admin-toolbar">
         <p>Confirmaciones compartidas de todos los invitados.</p>
         <div>
+          <button *ngIf="notificationPermission === 'default'" type="button" (click)="activarNotificaciones()">Activar avisos</button>
+          <span *ngIf="notificationPermission === 'granted'" class="admin-notification-enabled">Avisos activados</span>
+          <span *ngIf="notificationPermission === 'denied'" class="admin-toolbar__muted">Avisos bloqueados en el navegador</span>
           <button type="button" (click)="exportRecords()" [disabled]="!records.length">Descargar CSV</button>
           <button type="button" (click)="clearRecords()" [disabled]="!records.length || loading">Borrar registros</button>
         </div>
@@ -75,18 +83,63 @@
       <p *ngIf="!records.length" class="admin-empty">Todavía no hay confirmaciones.</p>
       <div *ngIf="records.length" class="admin-table-wrap">
         <table>
-          <thead><tr><th>Invitado</th><th>Adultos</th><th>Niños</th><th>Mensaje</th><th>Fecha</th></tr></thead>
+          <thead><tr><th>Invitado</th><th>Respuesta</th><th>Eventos</th><th>Adultos</th><th>Niños</th><th>Acompañantes</th><th>Fecha</th><th>Acciones</th></tr></thead>
           <tbody>
             <tr *ngFor="let record of records">
               <td>{{ record.name }}</td>
+              <td>{{ record.status === 'yes' ? 'Asiste' : 'No asistirá' }}</td>
+              <td>{{ record.status === 'no' ? '—' : (record.ceremony && record.party ? 'Misa y fiesta' : record.ceremony ? 'Misa' : 'Fiesta') }}</td>
               <td>{{ record.adults }}</td>
               <td>{{ record.children }}</td>
-              <td>{{ record.message || '—' }}</td>
+              <td>{{ record.companions || '—' }}</td>
               <td>{{ record.date | date:'short' }}</td>
+              <td class="admin-row-actions">
+                <button type="button" (click)="iniciarEdicion(record)">Editar</button>
+                <button type="button" (click)="eliminarRegistro(record)" [disabled]="loading">Borrar</button>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <section *ngIf="editingRecordId" class="admin-edit" aria-labelledby="edit-record-title">
+        <form (ngSubmit)="guardarEdicion()">
+          <h3 id="edit-record-title">Editar confirmación</h3>
+          <label class="admin-field" for="editName"><span>Nombre</span><input id="editName" name="editName" maxlength="100" [(ngModel)]="editDraft.name" required /></label>
+          <fieldset class="admin-choice">
+            <legend>Respuesta</legend>
+            <label><input name="editStatus" type="radio" value="yes" [(ngModel)]="editDraft.status" /> Sí asistirá</label>
+            <label><input name="editStatus" type="radio" value="no" [(ngModel)]="editDraft.status" /> No asistirá</label>
+          </fieldset>
+          <div *ngIf="editDraft.status === 'yes'" class="admin-edit__attendance">
+            <fieldset class="admin-choice">
+              <legend>Eventos</legend>
+              <label><input name="editCeremony" type="checkbox" [(ngModel)]="editDraft.ceremony" /> Misa</label>
+              <label><input name="editParty" type="checkbox" [(ngModel)]="editDraft.party" /> Fiesta</label>
+            </fieldset>
+            <div class="admin-form-section admin-form-section--counts">
+              <label class="admin-field" for="editAdults"><span>Adultos</span><input id="editAdults" name="editAdults" type="number" min="1" max="20" [(ngModel)]="editDraft.adults" required /></label>
+              <label class="admin-field" for="editChildren"><span>Niños</span><input id="editChildren" name="editChildren" type="number" min="0" max="20" [(ngModel)]="editDraft.children" /></label>
+            </div>
+            <label class="admin-field" for="editCompanions"><span>Acompañantes</span><input id="editCompanions" name="editCompanions" maxlength="500" [(ngModel)]="editDraft.companions" /></label>
+          </div>
+          <label class="admin-field" for="editMessage"><span>Mensaje para Alana</span><textarea id="editMessage" name="editMessage" rows="3" maxlength="240" [(ngModel)]="editDraft.message"></textarea></label>
+          <p *ngIf="error" class="admin-error" role="alert">{{ error }}</p>
+          <div class="admin-edit__actions">
+            <button class="admin-primary" type="submit" [disabled]="loading">{{ loading ? 'Guardando…' : 'Guardar cambios' }}</button>
+            <button type="button" (click)="cancelarEdicion()">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-messages" aria-labelledby="messages-title">
+        <h3 id="messages-title">Mensajes para Alana</h3>
+        <p *ngIf="!recordsWithMessages.length" class="admin-empty">Todavía no hay mensajes.</p>
+        <article *ngFor="let record of recordsWithMessages" class="admin-message">
+          <p>{{ record.message }}</p>
+          <footer><strong>{{ record.name }}</strong><time [attr.datetime]="record.date">{{ record.date | date:'medium' }}</time></footer>
+        </article>
+      </section>
     </section>
   </section>
 </main>

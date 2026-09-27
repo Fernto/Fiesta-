@@ -22,8 +22,12 @@ export class InvitationComponent implements OnInit, OnDestroy {
   invitation: InvitationData;
 
   guestName = '';
+  rsvpAttendance: 'yes' | 'no' = 'yes';
+  attendingCeremony = true;
+  attendingParty = true;
   adultCount = 1;
   childCount = 0;
+  companionNames = '';
   birthdayMessage = '';
   isSubmittingRsvp = false;
   confirmationError = '';
@@ -99,6 +103,15 @@ export class InvitationComponent implements OnInit, OnDestroy {
     return this.timeFormatter.format(this.invitation.eventDate);
   }
 
+  get formattedCeremonyTime(): string {
+    const match = /^(\d{2}):(\d{2})$/.exec(this.invitation.ceremony.time);
+    if (!match) return this.invitation.ceremony.time;
+
+    const date = new Date();
+    date.setHours(Number(match[1]), Number(match[2]), 0, 0);
+    return this.timeFormatter.format(date);
+  }
+
   private crearColumnasCollage(photos: InvitationPhoto[]): InvitationPhoto[][] {
     if (!photos.length) return [];
     const tiles = Array.from({ length: 16 }, (_, index) => photos[index % photos.length]);
@@ -136,15 +149,23 @@ export class InvitationComponent implements OnInit, OnDestroy {
    */
   get whatsappUrl(): string {
     const nombre = this.guestName.trim() || 'Invitado';
-    const personas = `${this.adultCount} adulto${this.adultCount === 1 ? '' : 's'} y ` +
-      `${this.childCount} niño${this.childCount === 1 ? '' : 's'}`;
     const lineas = [
-      `¡Hola! Confirmo mi asistencia al cumpleaños de ${this.invitation.childName}.`,
-      `Nombre: ${nombre}`,
-      `Asistiremos: ${personas}.`,
-      `Nos vemos el ${this.formattedDate} a las ${this.formattedTime}`
+      `¡Hola! ${this.rsvpAttendance === 'yes' ? 'Confirmo mi asistencia' : 'No podré asistir'} al cumpleaños de ${this.invitation.childName}.`,
+      `Nombre: ${nombre}`
     ];
 
+    if (this.rsvpAttendance === 'yes') {
+      const personas = `${this.adultCount} adulto${this.adultCount === 1 ? '' : 's'} y ` +
+        `${this.childCount} niño${this.childCount === 1 ? '' : 's'}`;
+      const eventos = [
+        this.attendingCeremony ? 'misa' : '',
+        this.attendingParty ? 'fiesta' : ''
+      ].filter(Boolean).join(' y ');
+      lineas.push(`Asistiremos: ${personas}.`, `Eventos: ${eventos}.`);
+      if (this.companionNames.trim()) lineas.push(`Acompañantes: ${this.companionNames.trim()}`);
+    }
+
+    lineas.push(`El evento es el ${this.formattedDate} a las ${this.formattedTime}.`);
     if (this.birthdayMessage.trim()) {
       lineas.push(`Mensaje para ${this.invitation.childName}: ${this.birthdayMessage.trim()}`);
     }
@@ -154,6 +175,10 @@ export class InvitationComponent implements OnInit, OnDestroy {
 
   async confirmarAsistencia(): Promise<void> {
     if (this.isSubmittingRsvp) return;
+    if (this.rsvpAttendance === 'yes' && !this.attendingCeremony && !this.attendingParty) {
+      this.confirmationError = 'Selecciona si asistirás a la misa, a la fiesta o a ambas.';
+      return;
+    }
     this.isSubmittingRsvp = true;
     this.confirmationError = '';
     this.confirmationStatus = '';
@@ -161,10 +186,14 @@ export class InvitationComponent implements OnInit, OnDestroy {
     const whatsappWindow = window.open('about:blank', '_blank');
     if (whatsappWindow) whatsappWindow.opener = null;
 
-    const record: Omit<AttendanceRecord, 'date'> = {
+    const record: Omit<AttendanceRecord, 'date' | 'id'> = {
       name: this.guestName.trim(),
-      adults: Number(this.adultCount) || 0,
-      children: Number(this.childCount) || 0,
+      status: this.rsvpAttendance,
+      ceremony: this.rsvpAttendance === 'yes' && this.attendingCeremony,
+      party: this.rsvpAttendance === 'yes' && this.attendingParty,
+      adults: this.rsvpAttendance === 'yes' ? Number(this.adultCount) || 0 : 0,
+      children: this.rsvpAttendance === 'yes' ? Number(this.childCount) || 0 : 0,
+      companions: this.rsvpAttendance === 'yes' ? this.companionNames.trim() : '',
       message: this.birthdayMessage.trim()
     };
 

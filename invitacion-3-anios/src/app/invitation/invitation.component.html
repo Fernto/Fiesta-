@@ -114,7 +114,7 @@
           <div class="event-item__content">
             <p class="event-item__eyebrow"><span aria-hidden="true">⛪</span> Misa de Acción de Gracias</p>
             <h3>Un deseo lleno de amor</h3>
-            <p class="event-item__time">{{ invitation.ceremony.time }}</p>
+            <p class="event-item__time">{{ formattedCeremonyTime }}</p>
             <p class="event-item__venue">{{ invitation.ceremony.venueName }}</p>
             <p class="event-item__address">{{ invitation.ceremony.address }}</p>
             <a *ngIf="invitation.ceremony.mapsUrl; else ceremoniaPendiente" class="text-link" [href]="invitation.ceremony.mapsUrl" target="_blank" rel="noopener noreferrer">Ver en Google Maps <span aria-hidden="true">↗</span></a>
@@ -162,27 +162,48 @@
           <input id="guestName" name="guestName" type="text" autocomplete="name" placeholder="¿Quién nos acompaña?" [(ngModel)]="guestName" required />
         </label>
 
-        <div class="field-row">
-          <label class="field" for="adultCount">
-            <span>Adultos</span>
-            <input id="adultCount" name="adultCount" type="number" min="1" max="20" [(ngModel)]="adultCount" />
+        <fieldset class="rsvp-options">
+          <legend>¿Podrás acompañarnos?</legend>
+          <label><input name="rsvpAttendance" type="radio" value="yes" [(ngModel)]="rsvpAttendance" /> <span>Sí, ahí estaré</span></label>
+          <label><input name="rsvpAttendance" type="radio" value="no" [(ngModel)]="rsvpAttendance" /> <span>No podré asistir</span></label>
+        </fieldset>
+
+        <ng-container *ngIf="rsvpAttendance === 'yes'">
+          <fieldset class="rsvp-options rsvp-options--events">
+            <legend>¿A cuáles eventos asistirás?</legend>
+            <label><input name="attendingCeremony" type="checkbox" [(ngModel)]="attendingCeremony" /> <span>Misa</span></label>
+            <label><input name="attendingParty" type="checkbox" [(ngModel)]="attendingParty" /> <span>Fiesta</span></label>
+          </fieldset>
+
+          <div class="field-row">
+            <label class="field" for="adultCount">
+              <span>Adultos</span>
+              <input id="adultCount" name="adultCount" type="number" min="1" max="20" [(ngModel)]="adultCount" required />
+            </label>
+            <label class="field" for="childCount">
+              <span>Niños</span>
+              <input id="childCount" name="childCount" type="number" min="0" max="20" [(ngModel)]="childCount" />
+            </label>
+          </div>
+
+          <label class="field" for="companionNames">
+            <span>Nombres de tus acompañantes <small>(opcional)</small></span>
+            <input id="companionNames" name="companionNames" type="text" maxlength="500" placeholder="Escribe los nombres separados por coma" [(ngModel)]="companionNames" />
           </label>
-          <label class="field" for="childCount">
-            <span>Niños</span>
-            <input id="childCount" name="childCount" type="number" min="0" max="20" [(ngModel)]="childCount" />
-          </label>
-        </div>
+        </ng-container>
 
         <label class="field" for="birthdayMessage">
           <span>Un mensajito para Alana <small>(opcional)</small></span>
           <textarea id="birthdayMessage" name="birthdayMessage" rows="3" maxlength="240" placeholder="Escribe aquí tus buenos deseos..." [(ngModel)]="birthdayMessage"></textarea>
         </label>
 
-        <button *ngIf="invitation.whatsappPhone; else whatsappPendiente" class="button button--whatsapp" type="submit" [disabled]="isSubmittingRsvp">
-          {{ isSubmittingRsvp ? 'Guardando confirmación…' : 'Confirmar por WhatsApp' }} <span aria-hidden="true">↗</span>
-        </button>
+        <ng-container *ngIf="invitation.whatsappPhone; else whatsappPendiente">
+          <button class="button button--whatsapp" type="submit" [disabled]="isSubmittingRsvp">
+            {{ isSubmittingRsvp ? 'Guardando confirmación…' : 'Enviar respuesta' }} <span aria-hidden="true">↗</span>
+          </button>
+        </ng-container>
         <ng-template #whatsappPendiente>
-          <button class="button button--whatsapp" type="button" disabled>Confirmar por WhatsApp</button>
+          <button class="button button--whatsapp" type="button" disabled>Enviar respuesta</button>
           <p class="rsvp__pending">Falta agregar el número de WhatsApp de contacto.</p>
         </ng-template>
         <p *ngIf="confirmationError" class="rsvp__pending" role="alert">{{ confirmationError }}</p>

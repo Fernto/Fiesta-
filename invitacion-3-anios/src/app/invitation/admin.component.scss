@@ -37,6 +37,7 @@
 .admin-attendance__heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
 .admin-attendance__heading h2 { margin: 0; font: 500 30px 'Fredoka', sans-serif; }
 .admin-stats { display: flex; gap: 45px; margin: 35px 0; }
+.admin-stats { flex-wrap: wrap; }
 .admin-stats div { display: grid; gap: 4px; }
 .admin-stats strong { font: 500 31px 'Fredoka', sans-serif; }
 .admin-stats span { color: #716a68; font-size: 10px; }
@@ -45,19 +46,43 @@
 .admin-toolbar > div { display: flex; gap: 8px; flex-shrink: 0; }
 .admin-toolbar button { min-height: 36px; padding: 0 12px; border: 1px solid rgba(45,45,45,.3); border-radius: 3px; background: #fffdfb; color: #2d2d2d; cursor: pointer; font-size: 10px; font-weight: 900; }
 .admin-toolbar button:disabled { cursor: default; opacity: .45; }
+.admin-toolbar button, .admin-row-actions button, .admin-edit__actions > button:not(.admin-primary) { min-height: 34px; padding: 0 10px; border: 1px solid rgba(45,45,45,.25); border-radius: 3px; background: #fffdfb; color: #2d2d2d; cursor: pointer; font-size: 10px; font-weight: 900; }
+.admin-notice { margin: 12px 0; padding: 10px 12px; border-left: 3px solid #2e7654; background: rgba(46,118,84,.08); color: #20543c; font-size: 11px; }
+.admin-notification-enabled { align-self: center; color: #276346; font-size: 10px; font-weight: 800; }
 .admin-empty { padding: 35px 0; text-align: center; }
 .admin-table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; text-align: left; }
-th, td { padding: 13px 10px; border-bottom: 1px solid rgba(45,45,45,.12); font-size: 11px; vertical-align: top; }
-th { color: #716a68; font-size: 9px; text-transform: uppercase; }
+.admin-row-actions { display: flex; gap: 6px; }
+.admin-row-actions button:disabled { cursor: wait; opacity: .5; }
+.admin-edit { margin-top: 22px; padding: 18px; border: 1px solid rgba(45,45,45,.16); background: rgba(255,253,251,.7); }
+.admin-edit form { display: grid; gap: 14px; }
+.admin-edit h3 { margin: 0; font: 500 22px 'Fredoka', sans-serif; }
+.admin-choice { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; padding: 0; border: 0; color: #4d3438; font-size: 11px; }
+.admin-choice legend { width: 100%; margin-bottom: 4px; font-weight: 900; }
+.admin-choice label { display: inline-flex; align-items: center; gap: 6px; }
+.admin-edit__attendance { display: grid; gap: 12px; }
+.admin-form-section--counts { grid-template-columns: repeat(2,minmax(0,1fr)); padding: 0; border: 0; }
+.admin-edit__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-messages { margin-top: 30px; }
+.admin-messages h3 { margin: 0 0 12px; font: 500 22px 'Fredoka', sans-serif; }
+.admin-messages .admin-empty { padding: 14px 0; text-align: left; }
+.admin-message { padding: 14px 0; border-top: 1px solid rgba(45,45,45,.13); }
+.admin-message > p { margin: 0 0 9px; color: #2d2d2d; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; white-space: pre-wrap; }
+.admin-message footer { display: flex; flex-wrap: wrap; gap: 6px 15px; color: #716a68; font-size: 10px; }
+.admin-message footer strong { color: #9a5a67; }
+.admin-page table { width: 100%; border-collapse: collapse; text-align: left; }
+.admin-page th, .admin-page td { padding: 13px 10px; border-bottom: 1px solid rgba(45,45,45,.12); font-size: 11px; vertical-align: top; }
+.admin-page th { color: #716a68; font-size: 9px; text-transform: uppercase; }
 
 @media (max-width: 680px) {
   .admin-page { padding: 0 18px 45px; }
   .admin-content, .admin-login { margin-top: 45px; }
   .admin-content h1, .admin-login h1 { font-size: 38px; }
   .admin-form-section { grid-template-columns: 1fr; }
+  .admin-form-section--counts { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .admin-attendance__heading { align-items: start; }
   .admin-toolbar { align-items: stretch; flex-direction: column; }
   .admin-toolbar > div { flex-wrap: wrap; }
-  th, td { min-width: 95px; }
+  .admin-page th, .admin-page td { min-width: 95px; }
+  .admin-row-actions { flex-direction: column; }
+  .admin-stats { gap: 24px; }
 }
