@@ -149,6 +149,8 @@
 .site-footer__star { color: #a76811; font-size: 20px; }
 .site-footer p { margin: 9px 0; font: 500 20px/1.35 'Fredoka', sans-serif; }
 .site-footer small { color: var(--muted); font-size: 9px; }
+.organizer-access { border-radius: 1px; color: inherit; text-decoration: none; }
+.organizer-access:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; text-decoration: underline; }
 @keyframes collage-right { from { transform: translateX(-12px); } to { transform: translateX(12px); } }
 @keyframes collage-left { from { transform: translateX(12px); } to { transform: translateX(-12px); } }
 @keyframes appear { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -207,7 +209,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-  .gallery__column { animation: none; }
-  .gallery__polaroid { transition: none; }
-  .face-phases__photo { transition: none; }
+  .gallery__column--left { animation: collage-left 24s linear infinite alternate !important; }
+  .gallery__column--right { animation: collage-right 24s linear infinite alternate !important; }
+  .gallery__polaroid { transition: transform 250ms ease, box-shadow 250ms ease !important; }
+  .gallery__polaroid--featured { transform: rotate(0deg) scale(1.14) !important; }
+  .face-phases__photo { transition: opacity 250ms linear !important; }
 }

@@ -191,6 +191,6 @@
     <span class="site-footer__star" aria-hidden="true">✦</span>
     <p>¡Esperamos verte para celebrar juntos<br />este día tan especial!</p>
     <small *ngIf="invitation.parentsNames.length">Con todo nuestro cariño, {{ invitation.parentsNames.join(' & ') }}</small>
-    <small *ngIf="!invitation.parentsNames.length">Con mucho cariño, la familia de Alana</small>
+    <small *ngIf="!invitation.parentsNames.length">Con mucho cariño, la <a class="organizer-access" href="#/organizacion" aria-label="Abrir panel de organización">familia</a> de Alana</small>
   </footer>
 </div>

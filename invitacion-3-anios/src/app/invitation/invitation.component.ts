@@ -65,8 +65,7 @@ export class InvitationComponent implements OnInit, OnDestroy {
     // Se actualiza cada minuto; para una cuenta regresiva de segundos bastaría
     // bajar el intervalo, pero por minuto es suficiente para este caso de uso.
     this.countdownTimer = setInterval(() => this.actualizarCountdown(), 60_000);
-    const prefiereMovimientoReducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!prefiereMovimientoReducido && (this.collageColumns.length || this.invitation.facePhasePhotos.length > 1)) {
+    if (this.collageColumns.length || this.invitation.facePhasePhotos.length > 1) {
       this.animationTimer = setInterval(() => {
         if (this.collageColumns.length) {
           this.activeCollageIndex = (this.activeCollageIndex + 1) % 16;
