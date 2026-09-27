@@ -10,28 +10,33 @@ export interface AttendanceRecord {
 
 @Injectable({ providedIn: 'root' })
 export class AttendanceService {
-  private readonly storageKey = 'alana-asistencias';
-
-  getAll(): AttendanceRecord[] {
-    try {
-      const stored = localStorage.getItem(this.storageKey);
-      const records: unknown = stored ? JSON.parse(stored) : [];
-      return Array.isArray(records) ? records as AttendanceRecord[] : [];
-    } catch {
-      return [];
-    }
+  async getAll(password: string): Promise<AttendanceRecord[]> {
+    const response = await fetch('/.netlify/functions/asistencias', {
+      headers: { Authorization: `Bearer ${password}` },
+      cache: 'no-store'
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error ?? 'No se pudieron cargar las confirmaciones.');
+    return body as AttendanceRecord[];
   }
 
-  agregar(record: AttendanceRecord): void {
-    try {
-      localStorage.setItem(this.storageKey, JSON.stringify([...this.getAll(), record]));
-    } catch {
-      // La confirmación por WhatsApp sigue disponible si el navegador bloquea el almacenamiento.
-    }
+  async agregar(record: Omit<AttendanceRecord, 'date'>): Promise<void> {
+    const response = await fetch('/.netlify/functions/asistencias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error ?? 'No se pudo guardar la confirmación.');
   }
 
-  borrar(): void {
-    localStorage.removeItem(this.storageKey);
+  async borrar(password: string): Promise<void> {
+    const response = await fetch('/.netlify/functions/asistencias', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${password}` }
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error ?? 'No se pudieron borrar las confirmaciones.');
   }
 
   descargarCSV(records: AttendanceRecord[]): void {

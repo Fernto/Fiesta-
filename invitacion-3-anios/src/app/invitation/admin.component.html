@@ -2,40 +2,91 @@
   <header class="admin-header">
     <a class="admin-header__back" href="/" aria-label="Volver a la invitación">← Invitación</a>
     <p class="admin-header__label">Alana · Organización</p>
+    <button *ngIf="authenticated" class="admin-header__logout" type="button" (click)="cerrarSesion()">Salir</button>
   </header>
 
-  <section class="admin-content" aria-labelledby="admin-title">
+  <section *ngIf="!authenticated" class="admin-login" aria-labelledby="admin-login-title">
+    <p class="admin-eyebrow">Acceso de organización</p>
+    <h1 id="admin-login-title">Panel de Alana</h1>
+    <form (ngSubmit)="iniciarSesion()">
+      <label class="admin-field" for="organizerPassword">
+        <span>Contraseña</span>
+        <input id="organizerPassword" name="organizerPassword" type="password" autocomplete="current-password" [(ngModel)]="password" required />
+      </label>
+      <button class="admin-primary" type="submit" [disabled]="loading || !password">{{ loading ? 'Validando…' : 'Entrar' }}</button>
+      <p *ngIf="error" class="admin-error" role="alert">{{ error }}</p>
+    </form>
+  </section>
+
+  <section *ngIf="authenticated" class="admin-content" aria-labelledby="admin-title">
     <p class="admin-eyebrow">Gestión de organización</p>
-    <h1 id="admin-title">Asistencia</h1>
-    <p class="admin-description">Resumen de las confirmaciones registradas en este navegador.</p>
+    <h1 id="admin-title">Datos del evento</h1>
+    <p class="admin-description">Los cambios se guardan en Netlify y se comparten con todos los invitados.</p>
 
-    <div class="admin-stats" aria-live="polite">
-      <div><strong>{{ records.length }}</strong><span>confirmaciones</span></div>
-      <div><strong>{{ totalAttendees }}</strong><span>asistentes estimados</span></div>
-    </div>
-
-    <div class="admin-toolbar">
-      <p>Los registros locales no se sincronizan con los dispositivos de tus invitados.</p>
-      <div>
-        <button type="button" (click)="exportRecords()" [disabled]="!records.length">Descargar CSV</button>
-        <button type="button" (click)="clearRecords()" [disabled]="!records.length">Borrar registros</button>
+    <form class="admin-event-form" (ngSubmit)="guardarEvento()">
+      <div class="admin-form-section">
+        <h2>Celebración</h2>
+        <label class="admin-field" for="eventDate"><span>Fecha y hora</span><input id="eventDate" name="eventDate" type="datetime-local" [(ngModel)]="settings.eventDate" required /></label>
+        <label class="admin-field" for="venueName"><span>Lugar de la fiesta</span><input id="venueName" name="venueName" type="text" maxlength="180" [(ngModel)]="settings.venueName" required /></label>
+        <label class="admin-field" for="address"><span>Dirección de la fiesta</span><input id="address" name="address" type="text" maxlength="180" [(ngModel)]="settings.address" required /></label>
+        <label class="admin-field" for="mapsUrl"><span>Enlace de Google Maps</span><input id="mapsUrl" name="mapsUrl" type="url" placeholder="https://maps.app.goo.gl/..." [(ngModel)]="settings.mapsUrl" /></label>
       </div>
-    </div>
 
-    <p *ngIf="!records.length" class="admin-empty">Todavía no hay confirmaciones en este dispositivo.</p>
-    <div *ngIf="records.length" class="admin-table-wrap">
-      <table>
-        <thead><tr><th>Invitado</th><th>Adultos</th><th>Niños</th><th>Mensaje</th><th>Fecha</th></tr></thead>
-        <tbody>
-          <tr *ngFor="let record of records">
-            <td>{{ record.name }}</td>
-            <td>{{ record.adults }}</td>
-            <td>{{ record.children }}</td>
-            <td>{{ record.message || '—' }}</td>
-            <td>{{ record.date | date:'short' }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="admin-form-section">
+        <h2>Misa de Acción de Gracias</h2>
+        <label class="admin-field" for="ceremonyTime"><span>Hora</span><input id="ceremonyTime" name="ceremonyTime" type="text" maxlength="80" [(ngModel)]="settings.ceremony.time" /></label>
+        <label class="admin-field" for="ceremonyVenue"><span>Templo</span><input id="ceremonyVenue" name="ceremonyVenue" type="text" maxlength="180" [(ngModel)]="settings.ceremony.venueName" /></label>
+        <label class="admin-field" for="ceremonyAddress"><span>Dirección</span><input id="ceremonyAddress" name="ceremonyAddress" type="text" maxlength="180" [(ngModel)]="settings.ceremony.address" /></label>
+        <label class="admin-field" for="ceremonyMaps"><span>Enlace de Google Maps</span><input id="ceremonyMaps" name="ceremonyMaps" type="url" placeholder="https://maps.app.goo.gl/..." [(ngModel)]="settings.ceremony.mapsUrl" /></label>
+      </div>
+
+      <div class="admin-form-section">
+        <h2>Contacto</h2>
+        <label class="admin-field" for="whatsappPhone"><span>WhatsApp (código de país y número)</span><input id="whatsappPhone" name="whatsappPhone" type="tel" inputmode="numeric" maxlength="20" placeholder="5215512345678" [(ngModel)]="settings.whatsappPhone" /></label>
+      </div>
+
+      <p *ngIf="error" class="admin-error" role="alert">{{ error }}</p>
+      <p *ngIf="status" class="admin-status" role="status">{{ status }}</p>
+      <button class="admin-primary" type="submit" [disabled]="loading">{{ loading ? 'Guardando…' : 'Guardar datos del evento' }}</button>
+    </form>
+
+    <section class="admin-attendance" aria-labelledby="attendance-title">
+      <div class="admin-attendance__heading">
+        <div>
+          <p class="admin-eyebrow">Respuestas recibidas</p>
+          <h2 id="attendance-title">Asistencia</h2>
+        </div>
+        <button type="button" (click)="actualizarAsistencias()" [disabled]="loading">Actualizar</button>
+      </div>
+
+      <div class="admin-stats" aria-live="polite">
+        <div><strong>{{ records.length }}</strong><span>confirmaciones</span></div>
+        <div><strong>{{ totalAttendees }}</strong><span>asistentes</span></div>
+      </div>
+
+      <div class="admin-toolbar">
+        <p>Confirmaciones compartidas de todos los invitados.</p>
+        <div>
+          <button type="button" (click)="exportRecords()" [disabled]="!records.length">Descargar CSV</button>
+          <button type="button" (click)="clearRecords()" [disabled]="!records.length || loading">Borrar registros</button>
+        </div>
+      </div>
+
+      <p *ngIf="!records.length" class="admin-empty">Todavía no hay confirmaciones.</p>
+      <div *ngIf="records.length" class="admin-table-wrap">
+        <table>
+          <thead><tr><th>Invitado</th><th>Adultos</th><th>Niños</th><th>Mensaje</th><th>Fecha</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let record of records">
+              <td>{{ record.name }}</td>
+              <td>{{ record.adults }}</td>
+              <td>{{ record.children }}</td>
+              <td>{{ record.message || '—' }}</td>
+              <td>{{ record.date | date:'short' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </section>
 </main>

@@ -12,6 +12,20 @@ npm start
 
 Luego abre `http://localhost:4200`.
 
+## Datos compartidos y panel organizador
+
+El enlace discreto en la palabra **familia** abre el panel de organización. Desde ahí se puede editar fecha y hora, datos de la misa y fiesta, enlaces de Maps y teléfono de WhatsApp. Las respuestas RSVP se guardan en Netlify Blobs, no en el navegador del invitado.
+
+Antes del siguiente despliegue, configura en Netlify una variable de entorno llamada `ORGANIZER_PASSWORD` con una contraseña larga y única:
+
+1. Abre la configuración del sitio en Netlify y entra a **Environment variables**.
+2. Añade `ORGANIZER_PASSWORD` para Production (y Deploy Previews si las usas). No la guardes en el repositorio ni la compartas en el chat.
+3. Publica la rama conectada. Netlify detectará las funciones en `netlify/functions` y las compilará junto a Angular.
+
+El organizador entra desde **familia** y usa esa contraseña. Los registros anteriores guardados en `localStorage` no se migran; las respuestas nuevas quedarán compartidas entre dispositivos.
+
+Para desarrollar con las funciones de Netlify disponibles, ejecuta `npx netlify-cli dev` desde la raíz del repositorio. `ng serve` por sí solo no ejecuta funciones y mostrará los valores locales predeterminados.
+
 ## Cómo personalizar los datos
 
 Edita el objeto que devuelve `InvitationService`:
@@ -20,15 +34,13 @@ Edita el objeto que devuelve `InvitationService`:
 src/app/invitation/invitation.service.ts
 ```
 
-Todos los campos están tipados en:
+Los valores iniciales de respaldo y las rutas de imágenes están en:
 
 ```
 src/app/invitation/models/invitation-data.model.ts
 ```
 
-Para producción, lo más limpio es que `getInvitation()` haga una llamada
-HTTP (`this.http.get<InvitationData>(...)`) en vez de devolver un objeto
-fijo — el componente no necesita cambiar nada.
+Los valores de fecha y lugares se cargan desde la función Netlify después de iniciar la página; los cambios del organizador se guardan en Netlify Blobs.
 
 ### Campos nuevos a llenar
 
@@ -42,8 +54,7 @@ fijo — el componente no necesita cambiar nada.
 ## Funcionalidad incluida
 
 - **Cuenta regresiva** en vivo (días/horas/minutos) hasta la fecha del evento.
-- **RSVP con número de invitados**: el mensaje de WhatsApp incluye
-  cuántas personas confirman.
+- **RSVP compartido**: cada respuesta se guarda en Netlify Blobs y el mensaje de WhatsApp incluye la cantidad de invitados.
 - **Confirmar por WhatsApp** y **Abrir en Google Maps** son enlaces
   reales (`<a href>`), no solo `window.open`, así que funcionan aunque
   el navegador bloquee ventanas emergentes y son accesibles por teclado.

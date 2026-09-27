@@ -1,6 +1,16 @@
 import { Injectable } from '@angular/core';
 import { InvitationData } from './models/invitation-data.model';
 
+export interface EditableInvitationSettings {
+  eventDate: string;
+  durationHours: number;
+  ceremony: InvitationData['ceremony'];
+  venueName: string;
+  address: string;
+  mapsUrl: string;
+  whatsappPhone: string;
+}
+
 /**
  * Centraliza el origen de los datos de la invitación.
  *
@@ -11,6 +21,26 @@ import { InvitationData } from './models/invitation-data.model';
  */
 @Injectable({ providedIn: 'root' })
 export class InvitationService {
+  async getPublicSettings(): Promise<EditableInvitationSettings> {
+    const response = await fetch('/.netlify/functions/evento', { cache: 'no-store' });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error ?? 'No se pudieron cargar los datos del evento.');
+    return body as EditableInvitationSettings;
+  }
+
+  async saveSettings(settings: EditableInvitationSettings, password: string): Promise<void> {
+    const response = await fetch('/.netlify/functions/evento', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${password}`
+      },
+      body: JSON.stringify(settings)
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error ?? 'No se pudieron guardar los datos del evento.');
+  }
+
   getInvitation(): InvitationData {
     return {
       childName: 'Alana',

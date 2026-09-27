@@ -25,6 +25,10 @@ export class InvitationComponent implements OnInit, OnDestroy {
   adultCount = 1;
   childCount = 0;
   birthdayMessage = '';
+  isSubmittingRsvp = false;
+  confirmationError = '';
+  confirmationStatus = '';
+  showWhatsAppLink = false;
   activeFaceIndex = 0;
   activeCollageIndex = 0;
   collageColumns: InvitationPhoto[][] = [];
@@ -61,6 +65,7 @@ export class InvitationComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    void this.cargarConfiguracionPublica();
     this.actualizarCountdown();
     // Se actualiza cada minuto; para una cuenta regresiva de segundos bastaría
     // bajar el intervalo, pero por minuto es suficiente para este caso de uso.
@@ -147,17 +152,50 @@ export class InvitationComponent implements OnInit, OnDestroy {
     return `https://wa.me/${this.invitation.whatsappPhone}?text=${encodeURIComponent(lineas.join('\n'))}`;
   }
 
-  confirmarAsistencia(): void {
-    const record: AttendanceRecord = {
+  async confirmarAsistencia(): Promise<void> {
+    if (this.isSubmittingRsvp) return;
+    this.isSubmittingRsvp = true;
+    this.confirmationError = '';
+    this.confirmationStatus = '';
+    this.showWhatsAppLink = false;
+    const whatsappWindow = window.open('about:blank', '_blank');
+    if (whatsappWindow) whatsappWindow.opener = null;
+
+    const record: Omit<AttendanceRecord, 'date'> = {
       name: this.guestName.trim(),
       adults: Number(this.adultCount) || 0,
       children: Number(this.childCount) || 0,
-      message: this.birthdayMessage.trim(),
-      date: new Date().toISOString()
+      message: this.birthdayMessage.trim()
     };
 
-    this.attendanceService.agregar(record);
-    window.open(this.whatsappUrl, '_blank', 'noopener,noreferrer');
+    try {
+      await this.attendanceService.agregar(record);
+      if (whatsappWindow) {
+        whatsappWindow.location.replace(this.whatsappUrl);
+      } else {
+        this.confirmationStatus = 'Asistencia guardada. Abre WhatsApp para enviar tu mensaje.';
+        this.showWhatsAppLink = true;
+      }
+    } catch (error) {
+      whatsappWindow?.close();
+      this.confirmationError = error instanceof Error ? error.message : 'No se pudo guardar la confirmación.';
+    } finally {
+      this.isSubmittingRsvp = false;
+    }
+  }
+
+  private async cargarConfiguracionPublica(): Promise<void> {
+    try {
+      const settings = await this.invitationService.getPublicSettings();
+      this.invitation = {
+        ...this.invitation,
+        ...settings,
+        eventDate: new Date(settings.eventDate)
+      };
+      this.actualizarCountdown();
+    } catch {
+      // Sin Netlify Dev en local se conservan los valores iniciales de la invitación.
+    }
   }
 
   /**

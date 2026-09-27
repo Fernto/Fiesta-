@@ -178,11 +178,17 @@
           <textarea id="birthdayMessage" name="birthdayMessage" rows="3" maxlength="240" placeholder="Escribe aquí tus buenos deseos..." [(ngModel)]="birthdayMessage"></textarea>
         </label>
 
-        <button *ngIf="invitation.whatsappPhone; else whatsappPendiente" class="button button--whatsapp" type="submit">Confirmar por WhatsApp <span aria-hidden="true">↗</span></button>
+        <button *ngIf="invitation.whatsappPhone; else whatsappPendiente" class="button button--whatsapp" type="submit" [disabled]="isSubmittingRsvp">
+          {{ isSubmittingRsvp ? 'Guardando confirmación…' : 'Confirmar por WhatsApp' }} <span aria-hidden="true">↗</span>
+        </button>
         <ng-template #whatsappPendiente>
           <button class="button button--whatsapp" type="button" disabled>Confirmar por WhatsApp</button>
           <p class="rsvp__pending">Falta agregar el número de WhatsApp de contacto.</p>
         </ng-template>
+        <p *ngIf="confirmationError" class="rsvp__pending" role="alert">{{ confirmationError }}</p>
+        <p *ngIf="confirmationStatus" class="rsvp__pending" role="status">{{ confirmationStatus }}
+          <a *ngIf="showWhatsAppLink" [href]="whatsappUrl" target="_blank" rel="noopener noreferrer">Abrir WhatsApp</a>
+        </p>
       </form>
     </section>
   </main>
