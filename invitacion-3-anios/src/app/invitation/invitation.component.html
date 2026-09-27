@@ -1,0 +1,170 @@
+<div class="invitation-page">
+  <header class="site-header">
+    <a class="wordmark" href="#inicio" aria-label="Alana, inicio">
+      <span class="wordmark__initial">A</span>
+      <span class="wordmark__name">Alana <span>cumple tres</span></span>
+    </a>
+    <nav class="site-nav" aria-label="Navegación principal">
+      <a href="#eventos">La celebración</a>
+      <a class="site-nav__rsvp" href="#rsvp">Confirmar asistencia <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio" aria-labelledby="hero-title">
+      <div class="hero__copy">
+        <p class="eyebrow"><span aria-hidden="true">✦</span> Una invitación muy especial</p>
+        <h1 id="hero-title">{{ invitation.childName }}</h1>
+        <p class="hero__subtitle">¡Cumple <strong>{{ invitation.age }}</strong> años!</p>
+        <p class="hero__message">{{ invitation.welcomeMessage }}</p>
+
+        <div class="hero__date">
+          <span class="hero__date-icon" aria-hidden="true">✿</span>
+          <span><strong>{{ formattedDate }}</strong><small>{{ formattedTime }}</small></span>
+        </div>
+
+        <div class="countdown" *ngIf="!countdown.finished; else diaLlegoBlock" aria-live="polite">
+          <p class="countdown__title">Falta poquito</p>
+          <div class="countdown__units">
+            <div class="countdown__unit"><strong>{{ countdown.days }}</strong><span>días</span></div>
+            <div class="countdown__unit"><strong>{{ countdown.hours }}</strong><span>horas</span></div>
+            <div class="countdown__unit"><strong>{{ countdown.minutes }}</strong><span>min</span></div>
+          </div>
+        </div>
+        <ng-template #diaLlegoBlock>
+          <p class="countdown__today">¡Hoy es el gran día! <span aria-hidden="true">✦</span></p>
+        </ng-template>
+
+        <a class="button button--mustard" href="#eventos">Ver los detalles <span aria-hidden="true">↓</span></a>
+      </div>
+
+      <div class="hero__art" aria-label="Gatito con corona dorada">
+        <span class="hero__spark hero__spark--one" aria-hidden="true">✦</span>
+        <span class="hero__spark hero__spark--two" aria-hidden="true">✧</span>
+        <span class="hero__spark hero__spark--three" aria-hidden="true">✦</span>
+        <figure class="hero__portrait">
+          <img *ngIf="invitation.childPhotoUrl" [src]="invitation.childPhotoUrl" alt="Gatito con una corona dorada" />
+          <figcaption>La pequeña reina del día</figcaption>
+        </figure>
+        <div class="hero__age-seal" aria-label="3 años"><strong>{{ invitation.age }}</strong><span>años</span></div>
+      </div>
+      <span class="hero__footnote">15 · NOVIEMBRE · 2026</span>
+    </section>
+
+    <section class="gallery section" id="galeria" aria-labelledby="gallery-title">
+      <div class="section-heading">
+        <p class="eyebrow"><span aria-hidden="true">✦</span> Nuestra festejada</p>
+        <h2 id="gallery-title">Pequeños momentos,<br /><em>grandes recuerdos.</em></h2>
+      </div>
+
+      <div class="gallery__carousel" *ngIf="activePhoto as photo; else galeriaPendiente">
+        <button class="gallery__arrow" type="button" (click)="cambiarFoto(-1)" [disabled]="invitation.galleryPhotos.length < 2" aria-label="Foto anterior">←</button>
+        <figure class="gallery__photo">
+          <img [src]="photo.src" [alt]="photo.alt" />
+          <figcaption>{{ photo.caption }}</figcaption>
+        </figure>
+        <button class="gallery__arrow" type="button" (click)="cambiarFoto(1)" [disabled]="invitation.galleryPhotos.length < 2" aria-label="Foto siguiente">→</button>
+        <p class="gallery__count">{{ currentPhotoIndex + 1 }} <span>/</span> {{ invitation.galleryPhotos.length }}</p>
+      </div>
+      <ng-template #galeriaPendiente>
+        <div class="gallery__empty">
+          <span class="gallery__empty-flower" aria-hidden="true">✿</span>
+          <p>Los recuerdos favoritos de Alana<br />aparecerán aquí muy pronto.</p>
+          <span class="gallery__empty-spark" aria-hidden="true">✦</span>
+        </div>
+      </ng-template>
+    </section>
+
+    <section class="events section" id="eventos" aria-labelledby="events-title">
+      <div class="section-heading section-heading--center">
+        <p class="eyebrow"><span aria-hidden="true">✦</span> Domingo de celebración</p>
+        <h2 id="events-title">Dos momentos,<br /><em>un día inolvidable.</em></h2>
+        <p class="section-heading__intro">Nos encantará compartir contigo cada parte de este día.</p>
+      </div>
+
+      <div class="event-list">
+        <article class="event-item event-item--church">
+          <div class="event-item__number">01</div>
+          <div class="event-item__content">
+            <p class="event-item__eyebrow"><span aria-hidden="true">⛪</span> Misa de Acción de Gracias</p>
+            <h3>Un deseo lleno de amor</h3>
+            <p class="event-item__time">{{ invitation.ceremony.time }}</p>
+            <p class="event-item__venue">{{ invitation.ceremony.venueName }}</p>
+            <p class="event-item__address">{{ invitation.ceremony.address }}</p>
+            <a *ngIf="invitation.ceremony.mapsUrl; else ceremoniaPendiente" class="text-link" [href]="invitation.ceremony.mapsUrl" target="_blank" rel="noopener noreferrer">Ver en Google Maps <span aria-hidden="true">↗</span></a>
+            <ng-template #ceremoniaPendiente><p class="event-item__pending">Ubicación por confirmar</p></ng-template>
+          </div>
+        </article>
+
+        <article class="event-item event-item--party">
+          <div class="event-item__number">02</div>
+          <div class="event-item__content">
+            <p class="event-item__eyebrow"><span aria-hidden="true">🎂</span> Fiesta de cumpleaños</p>
+            <h3>¡Que empiece la diversión!</h3>
+            <p class="event-item__time">{{ formattedTime }}</p>
+            <p class="event-item__venue">{{ invitation.venueName }}</p>
+            <p class="event-item__address">{{ invitation.address }}</p>
+            <a *ngIf="invitation.mapsUrl; else fiestaPendiente" class="text-link" [href]="invitation.mapsUrl" target="_blank" rel="noopener noreferrer">Ver en Google Maps <span aria-hidden="true">↗</span></a>
+            <ng-template #fiestaPendiente><p class="event-item__pending">Ubicación por confirmar</p></ng-template>
+            <button class="text-link event-item__calendar" type="button" (click)="descargarICS()">Agregar fiesta al calendario <span aria-hidden="true">＋</span></button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="gift section" *ngIf="invitation.giftSuggestion" aria-labelledby="gift-title">
+      <span class="gift__icon" aria-hidden="true">🎁</span>
+      <div>
+        <p class="eyebrow">Un detalle, si gustas</p>
+        <h2 id="gift-title">Tu compañía es el mejor regalo.</h2>
+        <p>{{ invitation.giftSuggestion }}</p>
+      </div>
+      <span class="gift__spark" aria-hidden="true">✦</span>
+    </section>
+
+    <section class="rsvp section" id="rsvp" aria-labelledby="rsvp-title">
+      <div class="rsvp__intro">
+        <p class="eyebrow"><span aria-hidden="true">✦</span> Nos vemos pronto</p>
+        <h2 id="rsvp-title">¿Nos acompañas<br /><em>a celebrar?</em></h2>
+        <p>Cuéntanos quiénes vienen y guarda un lugar en la fiesta.</p>
+        <span class="rsvp__doodle" aria-hidden="true">♡</span>
+      </div>
+
+      <form class="rsvp__form" (submit)="$event.preventDefault()">
+        <label class="field" for="guestName">
+          <span>Tu nombre</span>
+          <input id="guestName" name="guestName" type="text" autocomplete="name" placeholder="¿Quién nos acompaña?" [(ngModel)]="guestName" required />
+        </label>
+
+        <div class="field-row">
+          <label class="field" for="adultCount">
+            <span>Adultos</span>
+            <input id="adultCount" name="adultCount" type="number" min="1" max="20" [(ngModel)]="adultCount" />
+          </label>
+          <label class="field" for="childCount">
+            <span>Niños</span>
+            <input id="childCount" name="childCount" type="number" min="0" max="20" [(ngModel)]="childCount" />
+          </label>
+        </div>
+
+        <label class="field" for="birthdayMessage">
+          <span>Un mensajito para Alana <small>(opcional)</small></span>
+          <textarea id="birthdayMessage" name="birthdayMessage" rows="3" maxlength="240" placeholder="Escribe aquí tus buenos deseos..." [(ngModel)]="birthdayMessage"></textarea>
+        </label>
+
+        <a *ngIf="invitation.whatsappPhone; else whatsappPendiente" class="button button--whatsapp" [href]="whatsappUrl" target="_blank" rel="noopener noreferrer">Confirmar por WhatsApp <span aria-hidden="true">↗</span></a>
+        <ng-template #whatsappPendiente>
+          <button class="button button--whatsapp" type="button" disabled>Confirmar por WhatsApp</button>
+          <p class="rsvp__pending">Falta agregar el número de WhatsApp de contacto.</p>
+        </ng-template>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span class="site-footer__star" aria-hidden="true">✦</span>
+    <p>¡Esperamos verte para celebrar juntos<br />este día tan especial!</p>
+    <small *ngIf="invitation.parentsNames.length">Con todo nuestro cariño, {{ invitation.parentsNames.join(' & ') }}</small>
+    <small *ngIf="!invitation.parentsNames.length">Con mucho cariño, la familia de Alana</small>
+  </footer>
+</div>
