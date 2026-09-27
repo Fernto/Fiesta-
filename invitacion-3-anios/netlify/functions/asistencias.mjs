@@ -87,8 +87,9 @@ export default async function handler(request) {
       return json({ ...record, id, date: previous.date });
     }
 
-    const id = new URL(request.url).searchParams.get('id');
-    if (id) {
+    const requestUrl = new URL(request.url);
+    if (requestUrl.searchParams.has('id')) {
+      const id = requestUrl.searchParams.get('id') ?? '';
       if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: 'La confirmación seleccionada no es válida.' }, 400);
       await attendanceStore.delete(id);
       return json({ deleted: 1 });

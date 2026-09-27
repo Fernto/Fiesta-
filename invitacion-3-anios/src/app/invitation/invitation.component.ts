@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { InvitationData, InvitationPhoto } from './models/invitation-data.model';
 import { InvitationService } from './invitation.service';
 import { AttendanceRecord, AttendanceService } from './attendance.service';
@@ -37,6 +38,7 @@ export class InvitationComponent implements OnInit, OnDestroy {
   activeCollageIndex = 0;
   collageColumns: InvitationPhoto[][] = [];
   lightboxPhoto: InvitationPhoto | null = null;
+  lightboxPhotoIndex = 0;
   readonly collageTilts = [-4, 3, -2, 5, 2, -5, 4, -3, -6, 1, 5, -2, 3, -4, 2, -1];
 
   @ViewChild('galleryLightbox') private galleryLightbox?: ElementRef<HTMLDialogElement>;
@@ -62,7 +64,8 @@ export class InvitationComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly invitationService: InvitationService,
-    private readonly attendanceService: AttendanceService
+    private readonly attendanceService: AttendanceService,
+    private readonly sanitizer: DomSanitizer
   ) {
     this.invitation = this.invitationService.getInvitation();
     this.collageColumns = this.crearColumnasCollage(this.invitation.galleryPhotos);
@@ -104,12 +107,26 @@ export class InvitationComponent implements OnInit, OnDestroy {
   }
 
   get formattedCeremonyTime(): string {
-    const match = /^(\d{2}):(\d{2})$/.exec(this.invitation.ceremony.time);
+    const match = /^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i.exec(this.invitation.ceremony.time.trim());
     if (!match) return this.invitation.ceremony.time;
 
     const date = new Date();
-    date.setHours(Number(match[1]), Number(match[2]), 0, 0);
+    let hours = Number(match[1]);
+    if (match[3] && hours <= 12) {
+      hours = (hours % 12) + (match[3].toUpperCase() === 'PM' ? 12 : 0);
+    }
+    date.setHours(hours, Number(match[2]), 0, 0);
     return this.timeFormatter.format(date);
+  }
+
+  get partyMapEmbedUrl(): SafeResourceUrl | null {
+    const url = this.createMapEmbedUrl(this.invitation.venueName, this.invitation.address);
+    return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
+  }
+
+  get ceremonyMapEmbedUrl(): SafeResourceUrl | null {
+    const url = this.createMapEmbedUrl(this.invitation.ceremony.venueName, this.invitation.ceremony.address);
+    return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
   }
 
   private crearColumnasCollage(photos: InvitationPhoto[]): InvitationPhoto[][] {
@@ -119,8 +136,17 @@ export class InvitationComponent implements OnInit, OnDestroy {
   }
 
   abrirLightbox(photo: InvitationPhoto): void {
-    this.lightboxPhoto = photo;
+    const index = this.invitation.galleryPhotos.findIndex((item) => item.src === photo.src);
+    this.lightboxPhotoIndex = index >= 0 ? index : 0;
+    this.lightboxPhoto = this.invitation.galleryPhotos[this.lightboxPhotoIndex] ?? photo;
     this.galleryLightbox?.nativeElement.showModal();
+  }
+
+  cambiarFotoLightbox(direction: number): void {
+    const total = this.invitation.galleryPhotos.length;
+    if (total < 2) return;
+    this.lightboxPhotoIndex = (this.lightboxPhotoIndex + direction + total) % total;
+    this.lightboxPhoto = this.invitation.galleryPhotos[this.lightboxPhotoIndex];
   }
 
   cerrarLightbox(): void {
@@ -129,9 +155,16 @@ export class InvitationComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   cerrarLightboxConEscape(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && this.galleryLightbox?.nativeElement.open) {
+    if (!this.galleryLightbox?.nativeElement.open) return;
+    if (event.key === 'Escape') {
       event.preventDefault();
       this.cerrarLightbox();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      this.cambiarFotoLightbox(-1);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      this.cambiarFotoLightbox(1);
     }
   }
 
@@ -303,6 +336,14 @@ export class InvitationComponent implements OnInit, OnDestroy {
       minutes: minutosTotales % 60,
       finished: false
     };
+  }
+
+  private createMapEmbedUrl(venue: string, address: string): string {
+    const query = [venue, address]
+      .filter((value) => value.trim() && !/^direcci[oó]n(?: por confirmar)?$/i.test(value.trim()))
+      .join(', ');
+    if (!query) return '';
+    return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
   }
 
 }

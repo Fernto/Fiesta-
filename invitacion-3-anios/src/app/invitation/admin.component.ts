@@ -77,6 +77,10 @@ export class AdminComponent implements OnDestroy {
       this.knownRecordIds = new Set(records.map((record) => record.id));
       this.settings = {
         ...settings,
+        ceremony: {
+          ...settings.ceremony,
+          time: this.toTimeInput(settings.ceremony.time)
+        },
         eventDate: this.toLocalDateTime(settings.eventDate)
       };
       this.authenticated = true;
@@ -235,5 +239,18 @@ export class AdminComponent implements OnDestroy {
   private toLocalDateTime(value: string): string {
     const date = new Date(value);
     return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+  }
+
+  private toTimeInput(value: string): string {
+    const match = /^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i.exec(value.trim());
+    if (!match) return '';
+
+    let hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    if (minutes > 59) return '';
+    if (match[3] && hours <= 12) {
+      hours = (hours % 12) + (match[3].toUpperCase() === 'PM' ? 12 : 0);
+    }
+    return hours <= 23 ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}` : '';
   }
 }

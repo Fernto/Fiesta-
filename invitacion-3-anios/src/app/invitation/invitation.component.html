@@ -85,7 +85,10 @@
       <dialog #galleryLightbox class="gallery__lightbox" aria-label="Foto ampliada"
         (click)="cerrarLightboxSiFondo($event)" (close)="lightboxPhoto = null">
         <button class="gallery__lightbox-close" type="button" aria-label="Cerrar foto ampliada" (click)="cerrarLightbox()">×</button>
+        <button *ngIf="invitation.galleryPhotos.length > 1" class="gallery__lightbox-arrow gallery__lightbox-arrow--previous" type="button" aria-label="Foto anterior" (click)="cambiarFotoLightbox(-1)">←</button>
         <img *ngIf="lightboxPhoto as photo" [src]="photo.src" [alt]="photo.alt" />
+        <button *ngIf="invitation.galleryPhotos.length > 1" class="gallery__lightbox-arrow gallery__lightbox-arrow--next" type="button" aria-label="Foto siguiente" (click)="cambiarFotoLightbox(1)">→</button>
+        <span *ngIf="lightboxPhoto" class="gallery__lightbox-count" aria-live="polite">{{ lightboxPhotoIndex + 1 }} / {{ invitation.galleryPhotos.length }}</span>
       </dialog>
     </section>
 
@@ -119,6 +122,9 @@
             <p class="event-item__address">{{ invitation.ceremony.address }}</p>
             <a *ngIf="invitation.ceremony.mapsUrl; else ceremoniaPendiente" class="text-link" [href]="invitation.ceremony.mapsUrl" target="_blank" rel="noopener noreferrer">Ver en Google Maps <span aria-hidden="true">↗</span></a>
             <ng-template #ceremoniaPendiente><p class="event-item__pending">Ubicación por confirmar</p></ng-template>
+            <div *ngIf="ceremonyMapEmbedUrl" class="event-map">
+              <iframe [src]="ceremonyMapEmbedUrl" title="Mapa de la misa" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
           </div>
         </article>
 
@@ -132,6 +138,9 @@
             <p class="event-item__address">{{ invitation.address }}</p>
             <a *ngIf="invitation.mapsUrl; else fiestaPendiente" class="text-link" [href]="invitation.mapsUrl" target="_blank" rel="noopener noreferrer">Ver en Google Maps <span aria-hidden="true">↗</span></a>
             <ng-template #fiestaPendiente><p class="event-item__pending">Ubicación por confirmar</p></ng-template>
+            <div *ngIf="partyMapEmbedUrl" class="event-map">
+              <iframe [src]="partyMapEmbedUrl" title="Mapa de la fiesta" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
             <button class="text-link event-item__calendar" type="button" (click)="descargarICS()">Agregar fiesta al calendario <span aria-hidden="true">＋</span></button>
           </div>
         </article>
