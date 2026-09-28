@@ -4,4 +4,5 @@
   publish = "dist/invitacion-3-anios/browser"
 
 [functions]
-  directory = "netlify/functions"
+  directory = "invitacion-3-anios/netlify/functions"
+  node_bundler = "esbuild"

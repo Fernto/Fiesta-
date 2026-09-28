@@ -242,7 +242,9 @@ export class InvitationComponent implements OnInit, OnDestroy {
       link.href = this.whatsappUrl;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       this.confirmationStatus = 'Asistencia guardada. Abre WhatsApp para enviar tu mensaje.';
       this.showWhatsAppLink = true;
     } catch (error) {

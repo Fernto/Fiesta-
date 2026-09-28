@@ -1,7 +1,9 @@
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 
-const attendanceStore = getStore({ name: 'alana-asistencias', consistency: 'strong' });
+function getAttendanceStore() {
+  return getStore({ name: 'alana-asistencias', consistency: 'strong' });
+}
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -17,9 +19,10 @@ function authorized(request) {
 }
 
 async function readRecords() {
-  const { blobs } = await attendanceStore.list();
+  const store = getAttendanceStore();
+  const { blobs } = await store.list();
   const records = await Promise.all(blobs.map(async ({ key }) => {
-    const value = await attendanceStore.get(key, { type: 'json' });
+    const value = await store.get(key, { type: 'json' });
     return value ? {
       ...value,
       id: key,
@@ -59,7 +62,7 @@ export default async function handler(request) {
       const record = normalizeRecord(await request.json());
       if (!record) return json({ error: 'Revisa tu respuesta, eventos y cantidad de invitados.' }, 400);
       const id = randomUUID();
-      await attendanceStore.setJSON(id, { ...record, date: new Date().toISOString() });
+      await getAttendanceStore().setJSON(id, { ...record, date: new Date().toISOString() });
       return json({ saved: true }, 201);
     } catch {
       return json({ error: 'No se pudo guardar la confirmación. Inténtalo de nuevo.' }, 500);
@@ -79,11 +82,12 @@ export default async function handler(request) {
       const body = await request.json();
       const id = typeof body.id === 'string' ? body.id : '';
       if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: 'La confirmación seleccionada no es válida.' }, 400);
-      const previous = await attendanceStore.get(id, { type: 'json' });
+      const store = getAttendanceStore();
+      const previous = await store.get(id, { type: 'json' });
       if (!previous) return json({ error: 'No se encontró esa confirmación.' }, 404);
       const record = normalizeRecord(body);
       if (!record) return json({ error: 'Revisa la respuesta, los eventos y la cantidad de invitados.' }, 400);
-      await attendanceStore.setJSON(id, { ...record, date: previous.date });
+      await store.setJSON(id, { ...record, date: previous.date });
       return json({ ...record, id, date: previous.date });
     }
 
@@ -94,8 +98,9 @@ export default async function handler(request) {
       await attendanceStore.delete(id);
       return json({ deleted: 1 });
     }
-    const { blobs } = await attendanceStore.list();
-    await Promise.all(blobs.map(({ key }) => attendanceStore.delete(key)));
+    const store = getAttendanceStore();
+    const { blobs } = await store.list();
+    await Promise.all(blobs.map(({ key }) => store.delete(key)));
     return json({ deleted: blobs.length });
   } catch {
     return json({ error: 'No se pudieron procesar las confirmaciones.' }, 500);

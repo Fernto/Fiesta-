@@ -1,7 +1,10 @@
 import { timingSafeEqual } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 
-const settingsStore = getStore({ name: 'alana-evento', consistency: 'strong' });
+function getSettingsStore() {
+  return getStore({ name: 'alana-evento', consistency: 'strong' });
+}
+
 const settingsKey = 'datos';
 
 const defaultSettings = {
@@ -48,7 +51,7 @@ function validMapsUrl(value) {
 }
 
 async function readSettings() {
-  const stored = await settingsStore.get(settingsKey);
+  const stored = await getSettingsStore().get(settingsKey);
   return stored ? JSON.parse(stored) : defaultSettings;
 }
 
@@ -89,7 +92,7 @@ export default async function handler(request) {
       whatsappPhone: text(body.whatsappPhone, 20).replace(/\D/g, '').slice(0, 15)
     };
 
-    await settingsStore.setJSON(settingsKey, settings);
+    await getSettingsStore().setJSON(settingsKey, settings);
     return json(settings);
   } catch {
     return json({ error: 'No se pudieron guardar los datos del evento.' }, 500);
