@@ -28,7 +28,6 @@ export class InvitationComponent implements OnInit, OnDestroy {
   attendingParty = true;
   adultCount = 1;
   childCount = 0;
-  companionNames = '';
   birthdayMessage = '';
   isSubmittingRsvp = false;
   confirmationError = '';
@@ -85,7 +84,7 @@ export class InvitationComponent implements OnInit, OnDestroy {
         if (this.invitation.facePhasePhotos.length > 1) {
           this.activeFaceIndex = (this.activeFaceIndex + 1) % this.invitation.facePhasePhotos.length;
         }
-      }, 3000);
+      }, 2000);
     }
   }
 
@@ -100,6 +99,16 @@ export class InvitationComponent implements OnInit, OnDestroy {
 
   get formattedDate(): string {
     return this.dateFormatter.format(this.invitation.eventDate);
+  }
+
+  get formattedShortDate(): string {
+    const dateParts = new Intl.DateTimeFormat('es-MX', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    }).formatToParts(this.invitation.eventDate);
+    const parts = Object.fromEntries(dateParts.map(({ type, value }) => [type, value]));
+    return `${parts['day']} · ${parts['month'].toLocaleUpperCase('es-MX')} · ${parts['year']}`;
   }
 
   get formattedTime(): string {
@@ -195,7 +204,6 @@ export class InvitationComponent implements OnInit, OnDestroy {
         this.attendingParty ? 'fiesta' : ''
       ].filter(Boolean).join(' y ');
       lineas.push(`Asistiremos: ${personas}.`, `Eventos: ${eventos}.`);
-      if (this.companionNames.trim()) lineas.push(`Acompañantes: ${this.companionNames.trim()}`);
     }
 
     lineas.push(`El evento es el ${this.formattedDate} a las ${this.formattedTime}.`);
@@ -226,7 +234,7 @@ export class InvitationComponent implements OnInit, OnDestroy {
       party: this.rsvpAttendance === 'yes' && this.attendingParty,
       adults: this.rsvpAttendance === 'yes' ? Number(this.adultCount) || 0 : 0,
       children: this.rsvpAttendance === 'yes' ? Number(this.childCount) || 0 : 0,
-      companions: this.rsvpAttendance === 'yes' ? this.companionNames.trim() : '',
+      companions: '',
       message: this.birthdayMessage.trim()
     };
 

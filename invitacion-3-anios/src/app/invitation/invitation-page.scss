@@ -142,7 +142,7 @@
 .rsvp__intro h2 { font-size: 43px; }
 .rsvp__intro h2 em { color: #75434a; }
 .rsvp__intro > p:not(.eyebrow) { max-width: 290px; margin: 15px 0 0; color: #573d40; font-size: 13px; line-height: 1.7; }
-.rsvp__doodle { display: block; margin-top: 22px; color: #a64e66; font-size: 36px; transform: rotate(-13deg); }
+.rsvp__face { display: block; width: 130px; height: 130px; margin-top: 18px; object-fit: contain; transition: opacity 300ms ease; }
 .rsvp__form { display: grid; gap: 15px; width: min(100%,460px); }
 .rsvp__pending { margin: -8px 0 0; color: #573d40; font-size: 10px; }
 .field { display: grid; gap: 6px; color: #4d3438; font-size: 10px; font-weight: 900; }
@@ -202,7 +202,7 @@
   .gift__spark { margin-left: auto; }
   .rsvp { grid-template-columns: 1fr; gap: 25px; }
   .rsvp__intro { justify-self: start; }
-  .rsvp__doodle { display: none; }
+  .rsvp__face { width: 100px; height: 100px; margin-top: 12px; }
   .rsvp__form { width: 100%; }
   .rsvp-options { gap: 7px; }
   .rsvp-options label span { min-height: 42px; padding: 0 11px; }
