@@ -224,8 +224,6 @@ export class InvitationComponent implements OnInit, OnDestroy {
     this.confirmationError = '';
     this.confirmationStatus = '';
     this.showWhatsAppLink = false;
-    const whatsappWindow = window.open('about:blank', '_blank');
-    if (whatsappWindow) whatsappWindow.opener = null;
 
     const record: Omit<AttendanceRecord, 'date' | 'id'> = {
       name: this.guestName.trim(),
@@ -240,14 +238,14 @@ export class InvitationComponent implements OnInit, OnDestroy {
 
     try {
       await this.attendanceService.agregar(record);
-      if (whatsappWindow) {
-        whatsappWindow.location.replace(this.whatsappUrl);
-      } else {
-        this.confirmationStatus = 'Asistencia guardada. Abre WhatsApp para enviar tu mensaje.';
-        this.showWhatsAppLink = true;
-      }
+      const link = document.createElement('a');
+      link.href = this.whatsappUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.click();
+      this.confirmationStatus = 'Asistencia guardada. Abre WhatsApp para enviar tu mensaje.';
+      this.showWhatsAppLink = true;
     } catch (error) {
-      whatsappWindow?.close();
       this.confirmationError = error instanceof Error ? error.message : 'No se pudo guardar la confirmación.';
     } finally {
       this.isSubmittingRsvp = false;
