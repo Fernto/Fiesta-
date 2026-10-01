@@ -62,6 +62,9 @@ export interface InvitationData {
 
   /** Sugerencia de regalo, ej. "Un libro infantil" (opcional) */
   giftSuggestion?: string;
+
+  /** Estilo de visualización de la galería */
+  galleryStyle?: 'collage' | 'carousel';
 }
 
 export interface InvitationEvent {

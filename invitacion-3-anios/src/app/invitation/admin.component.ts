@@ -3,6 +3,7 @@ import { Component, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AttendanceRecord, AttendanceService } from './attendance.service';
 import { EditableInvitationSettings, InvitationService } from './invitation.service';
+import { GuestRecord, GuestService } from './guest.service';
 
 @Component({
   selector: 'app-admin',
@@ -19,6 +20,10 @@ export class AdminComponent implements OnDestroy {
   status = '';
   newAttendanceNotice = '';
   editingRecordId: string | null = null;
+  guests: GuestRecord[] = [];
+  newGuest = { name: '', phone: '', email: '' };
+  guestError = '';
+  guestLoading = false;
   editDraft: AttendanceRecord = {
     id: '',
     name: '',
@@ -38,7 +43,8 @@ export class AdminComponent implements OnDestroy {
     venueName: '',
     address: '',
     mapsUrl: '',
-    whatsappPhone: ''
+    whatsappPhone: '',
+    galleryStyle: 'collage'
   };
 
   private attendancePoll?: ReturnType<typeof setInterval>;
@@ -46,7 +52,8 @@ export class AdminComponent implements OnDestroy {
 
   constructor(
     private readonly attendanceService: AttendanceService,
-    private readonly invitationService: InvitationService
+    private readonly invitationService: InvitationService,
+    private readonly guestService: GuestService
   ) {}
 
   get totalAttendees(): number {
@@ -69,12 +76,14 @@ export class AdminComponent implements OnDestroy {
     this.loading = true;
     this.error = '';
     try {
-      const [records, settings] = await Promise.all([
+      const [records, settings, guests] = await Promise.all([
         this.attendanceService.getAll(this.password),
-        this.invitationService.getPublicSettings()
+        this.invitationService.getPublicSettings(),
+        this.guestService.getAll(this.password)
       ]);
       this.records = records;
       this.knownRecordIds = new Set(records.map((record) => record.id));
+      this.guests = guests;
       this.settings = {
         ...settings,
         ceremony: {
@@ -151,6 +160,7 @@ export class AdminComponent implements OnDestroy {
     this.error = '';
     this.newAttendanceNotice = '';
     this.editingRecordId = null;
+    this.guests = [];
   }
 
   iniciarEdicion(record: AttendanceRecord): void {
@@ -196,6 +206,49 @@ export class AdminComponent implements OnDestroy {
     } finally {
       this.loading = false;
     }
+  }
+
+  async agregarInvitado(): Promise<void> {
+    if (!this.newGuest.name) return;
+    this.guestLoading = true;
+    this.guestError = '';
+    try {
+      const guest = await this.guestService.agregar(this.newGuest, this.password);
+      this.guests = [guest, ...this.guests];
+      this.newGuest = { name: '', phone: '', email: '' };
+    } catch (error) {
+      this.guestError = error instanceof Error ? error.message : 'Error al guardar invitado.';
+    } finally {
+      this.guestLoading = false;
+    }
+  }
+
+  async borrarInvitado(id: string): Promise<void> {
+    if (!window.confirm('¿Borrar este invitado? Los enlaces enviados dejarán de estar personalizados.')) return;
+    this.guestLoading = true;
+    try {
+      await this.guestService.borrar(this.password, id);
+      this.guests = this.guests.filter(g => g.id !== id);
+    } catch (error) {
+      this.guestError = error instanceof Error ? error.message : 'Error al borrar invitado.';
+    } finally {
+      this.guestLoading = false;
+    }
+  }
+
+  getGuestUrl(guest: GuestRecord): string {
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?guest=${guest.id}`;
+  }
+
+  enviarPorWhatsApp(guest: GuestRecord): void {
+    if (!guest.phone) {
+      alert('Este invitado no tiene teléfono guardado.');
+      return;
+    }
+    const url = this.getGuestUrl(guest);
+    const mensaje = `¡Hola ${guest.name}! Te invito a mi fiesta de cumpleaños. Entra a este enlace para ver los detalles y confirmar tu asistencia: ${url}`;
+    window.open(`https://wa.me/${guest.phone}?text=${encodeURIComponent(mensaje)}`, '_blank');
   }
 
   get notificationPermission(): NotificationPermission | 'unsupported' {

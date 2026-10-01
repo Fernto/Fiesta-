@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 export interface AttendanceRecord {
   id: string;
@@ -15,49 +17,46 @@ export interface AttendanceRecord {
 
 @Injectable({ providedIn: 'root' })
 export class AttendanceService {
+  private http = inject(HttpClient);
+
   async getAll(password: string): Promise<AttendanceRecord[]> {
-    const response = await fetch('/.netlify/functions/asistencias', {
-      headers: { Authorization: `Bearer ${password}` },
-      cache: 'no-store'
-    });
-    const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? 'No se pudieron cargar las confirmaciones.');
-    return body as AttendanceRecord[];
+    try {
+      return await firstValueFrom(this.http.get<AttendanceRecord[]>('/.netlify/functions/asistencias', {
+        headers: { Authorization: `Bearer ${password}` }
+      }));
+    } catch (error: any) {
+      throw new Error(error.error?.error ?? 'No se pudieron cargar las confirmaciones.');
+    }
   }
 
   async agregar(record: Omit<AttendanceRecord, 'date' | 'id'>): Promise<void> {
-    const response = await fetch('/.netlify/functions/asistencias', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(record)
-    });
-    const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? 'No se pudo guardar la confirmación.');
+    try {
+      await firstValueFrom(this.http.post('/.netlify/functions/asistencias', record));
+    } catch (error: any) {
+      throw new Error(error.error?.error ?? 'No se pudo guardar la confirmación.');
+    }
   }
 
   async actualizar(record: AttendanceRecord, password: string): Promise<void> {
-    const response = await fetch('/.netlify/functions/asistencias', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${password}`
-      },
-      body: JSON.stringify(record)
-    });
-    const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? 'No se pudo actualizar la confirmación.');
+    try {
+      await firstValueFrom(this.http.put('/.netlify/functions/asistencias', record, {
+        headers: { Authorization: `Bearer ${password}` }
+      }));
+    } catch (error: any) {
+      throw new Error(error.error?.error ?? 'No se pudo actualizar la confirmación.');
+    }
   }
 
   async borrar(password: string, id?: string): Promise<void> {
-    const endpoint = id
-      ? `/.netlify/functions/asistencias?id=${encodeURIComponent(id)}`
-      : '/.netlify/functions/asistencias';
-    const response = await fetch(endpoint, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${password}` }
-    });
-    const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? 'No se pudieron borrar las confirmaciones.');
+    const params = id ? { id } : {};
+    try {
+      await firstValueFrom(this.http.delete('/.netlify/functions/asistencias', {
+        headers: { Authorization: `Bearer ${password}` },
+        params
+      }));
+    } catch (error: any) {
+      throw new Error(error.error?.error ?? 'No se pudieron borrar las confirmaciones.');
+    }
   }
 
   descargarCSV(records: AttendanceRecord[]): void {
