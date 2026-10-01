@@ -41,14 +41,59 @@
       </div>
 
       <div class="admin-form-section">
-        <h2>Contacto</h2>
+        <h2>Contacto y Visualización</h2>
         <label class="admin-field" for="whatsappPhone"><span>WhatsApp (código de país y número)</span><input id="whatsappPhone" name="whatsappPhone" type="tel" inputmode="numeric" maxlength="20" placeholder="5215512345678" [(ngModel)]="settings.whatsappPhone" /></label>
+        
+        <label class="admin-field" for="galleryStyle">
+          <span>Estilo de la Galería</span>
+          <select id="galleryStyle" name="galleryStyle" [(ngModel)]="settings.galleryStyle">
+            <option value="collage">Collage animado</option>
+            <option value="carousel">Carrusel deslizable</option>
+          </select>
+        </label>
       </div>
 
       <p *ngIf="error" class="admin-error" role="alert">{{ error }}</p>
       <p *ngIf="status" class="admin-status" role="status">{{ status }}</p>
       <button class="admin-primary" type="submit" [disabled]="loading">{{ loading ? 'Guardando…' : 'Guardar datos del evento' }}</button>
     </form>
+
+    <section class="admin-guests" aria-labelledby="guests-title" style="margin-bottom: 3rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border-color);">
+      <div class="admin-attendance__heading">
+        <div>
+          <p class="admin-eyebrow">Enlaces personalizados</p>
+          <h2 id="guests-title">Lista de Invitados</h2>
+        </div>
+      </div>
+      <p class="admin-description">Agrega a tus invitados para generar un enlace único con su nombre pre-llenado.</p>
+      
+      <form class="admin-event-form" (ngSubmit)="agregarInvitado()">
+        <div class="field-row" style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap;">
+          <label class="admin-field" for="newGuestName" style="flex: 2; min-width: 200px;"><span>Nombre</span><input id="newGuestName" name="newGuestName" type="text" [(ngModel)]="newGuest.name" required placeholder="Ej. Familia Pérez" /></label>
+          <label class="admin-field" for="newGuestPhone" style="flex: 1; min-width: 150px;"><span>Teléfono (WhatsApp)</span><input id="newGuestPhone" name="newGuestPhone" type="tel" [(ngModel)]="newGuest.phone" placeholder="52155..." /></label>
+          <button class="admin-primary" type="submit" [disabled]="guestLoading || !newGuest.name" style="margin-bottom: 0;">{{ guestLoading ? 'Guardando…' : 'Añadir invitado' }}</button>
+        </div>
+        <p *ngIf="guestError" class="admin-error" role="alert">{{ guestError }}</p>
+      </form>
+
+      <div class="admin-table-wrap" *ngIf="guests.length">
+        <table>
+          <thead><tr><th>Nombre</th><th>Teléfono</th><th>Enlace único</th><th>Acciones</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let guest of guests">
+              <td>{{ guest.name }}</td>
+              <td>{{ guest.phone || '—' }}</td>
+              <td><input type="text" readonly [value]="getGuestUrl(guest)" style="width: 100%; font-size: 0.8rem; padding: 0.25rem;" onClick="this.select();" /></td>
+              <td class="admin-row-actions">
+                <button type="button" (click)="enviarPorWhatsApp(guest)" [disabled]="!guest.phone">WhatsApp</button>
+                <button type="button" (click)="borrarInvitado(guest.id)" [disabled]="guestLoading">Borrar</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p *ngIf="!guests.length" class="admin-empty" style="margin-top: 1rem;">Aún no has agregado invitados. Agrega uno arriba para generar su enlace.</p>
+    </section>
 
     <section class="admin-attendance" aria-labelledby="attendance-title">
       <div class="admin-attendance__heading">

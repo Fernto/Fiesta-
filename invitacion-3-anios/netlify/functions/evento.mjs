@@ -89,7 +89,8 @@ export default async function handler(request) {
       venueName: text(body.venueName),
       address: text(body.address),
       mapsUrl: validMapsUrl(body.mapsUrl),
-      whatsappPhone: text(body.whatsappPhone, 20).replace(/\D/g, '').slice(0, 15)
+      whatsappPhone: text(body.whatsappPhone, 20).replace(/\D/g, '').slice(0, 15),
+      galleryStyle: body.galleryStyle === 'carousel' ? 'carousel' : 'collage'
     };
 
     await getSettingsStore().setJSON(settingsKey, settings);

@@ -5,6 +5,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { InvitationData, InvitationPhoto } from './models/invitation-data.model';
 import { InvitationService } from './invitation.service';
 import { AttendanceRecord, AttendanceService } from './attendance.service';
+import { GuestRecord, GuestService } from './guest.service';
 
 interface Countdown {
   days: number;
@@ -21,6 +22,7 @@ interface Countdown {
 })
 export class InvitationComponent implements OnInit, OnDestroy {
   invitation: InvitationData;
+  guestRecord: GuestRecord | null = null;
 
   guestName = '';
   rsvpAttendance: 'yes' | 'no' = 'yes';
@@ -64,6 +66,7 @@ export class InvitationComponent implements OnInit, OnDestroy {
   constructor(
     private readonly invitationService: InvitationService,
     private readonly attendanceService: AttendanceService,
+    private readonly guestService: GuestService,
     private readonly sanitizer: DomSanitizer
   ) {
     this.invitation = this.invitationService.getInvitation();
@@ -71,6 +74,17 @@ export class InvitationComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const params = new URLSearchParams(window.location.search);
+    const guestId = params.get('guest');
+    if (guestId) {
+      this.guestService.getById(guestId)
+        .then(guest => {
+          this.guestRecord = guest;
+          if (guest.name) this.guestName = guest.name;
+        })
+        .catch(() => console.warn('Guest not found'));
+    }
+
     void this.cargarConfiguracionPublica();
     this.actualizarCountdown();
     // Se actualiza cada minuto; para una cuenta regresiva de segundos bastaría

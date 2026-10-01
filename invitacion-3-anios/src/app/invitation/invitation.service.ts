@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { InvitationData } from './models/invitation-data.model';
 
 export interface EditableInvitationSettings {
@@ -9,6 +11,7 @@ export interface EditableInvitationSettings {
   address: string;
   mapsUrl: string;
   whatsappPhone: string;
+  galleryStyle: 'collage' | 'carousel';
 }
 
 /**
@@ -21,24 +24,24 @@ export interface EditableInvitationSettings {
  */
 @Injectable({ providedIn: 'root' })
 export class InvitationService {
+  private http = inject(HttpClient);
+
   async getPublicSettings(): Promise<EditableInvitationSettings> {
-    const response = await fetch('/.netlify/functions/evento', { cache: 'no-store' });
-    const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? 'No se pudieron cargar los datos del evento.');
-    return body as EditableInvitationSettings;
+    try {
+      return await firstValueFrom(this.http.get<EditableInvitationSettings>('/.netlify/functions/evento'));
+    } catch (error: any) {
+      throw new Error(error.error?.error ?? 'No se pudieron cargar los datos del evento.');
+    }
   }
 
   async saveSettings(settings: EditableInvitationSettings, password: string): Promise<void> {
-    const response = await fetch('/.netlify/functions/evento', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${password}`
-      },
-      body: JSON.stringify(settings)
-    });
-    const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? 'No se pudieron guardar los datos del evento.');
+    try {
+      await firstValueFrom(this.http.put('/.netlify/functions/evento', settings, {
+        headers: { Authorization: `Bearer ${password}` }
+      }));
+    } catch (error: any) {
+      throw new Error(error.error?.error ?? 'No se pudieron guardar los datos del evento.');
+    }
   }
 
   getInvitation(): InvitationData {
@@ -77,6 +80,7 @@ export class InvitationService {
       welcomeMessage: 'Acompáñanos a celebrar una tarde llena de juegos, pastel y mucho cariño.',
       parentsNames: [],
       whatsappPhone: '',
+      galleryStyle: 'collage',
       childPhotoUrl: 'assets/fotos/galeria/3.jpg',
       childPhotoSrcSet: 'assets/fotos/miniaturas/galeria/3-320.jpg 320w, assets/fotos/miniaturas/galeria/3-640.jpg 640w',
       dressCode: 'Colores pastel y ropa cómoda para jugar',

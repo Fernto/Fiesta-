@@ -16,6 +16,13 @@
         <p class="eyebrow"><span aria-hidden="true">✦</span> Una invitación muy especial</p>
         <h1 id="hero-title">{{ invitation.childName }}</h1>
         <p class="hero__subtitle">¡Cumple <strong>{{ invitation.age }}</strong> años!</p>
+        
+        <div *ngIf="guestRecord" style="margin-top: 1.5rem; margin-bottom: 0.5rem;">
+          <h2 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.8rem; line-height: 1.1;">
+            ¡Hola {{ guestRecord.name }}!
+          </h2>
+        </div>
+        
         <p class="hero__message">{{ invitation.welcomeMessage }}</p>
 
         <div class="hero__date">
@@ -59,7 +66,17 @@
         <h2 id="gallery-title">Pequeños momentos,<br /><em>grandes recuerdos.</em></h2>
       </div>
 
-      <div class="gallery__collage" *ngIf="collageColumns.length; else galeriaPendiente">
+      <div *ngIf="invitation.galleryStyle === 'carousel' && invitation.galleryPhotos.length" class="gallery__carousel">
+        <div class="carousel-container" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 1rem; padding-bottom: 1rem;">
+          <img *ngFor="let photo of invitation.galleryPhotos" 
+               [src]="photo.src" 
+               [alt]="photo.alt" 
+               (click)="abrirLightbox(photo)"
+               style="scroll-snap-align: center; height: 300px; width: auto; border-radius: 12px; object-fit: cover; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer;" />
+        </div>
+      </div>
+
+      <div class="gallery__collage" *ngIf="invitation.galleryStyle !== 'carousel' && collageColumns.length; else galeriaPendiente">
         <div class="gallery__column" *ngFor="let column of collageColumns; let columnIndex = index"
           [class.gallery__column--left]="columnIndex % 2 === 0" [class.gallery__column--right]="columnIndex % 2 === 1"
           [class.gallery__column--featured]="activeCollageIndex >= columnIndex * 4 && activeCollageIndex < columnIndex * 4 + 4"
