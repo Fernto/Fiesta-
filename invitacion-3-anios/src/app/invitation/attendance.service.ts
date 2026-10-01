@@ -48,12 +48,14 @@ export class AttendanceService {
   }
 
   async borrar(password: string, id?: string): Promise<void> {
-    const params = id ? { id } : {};
+    const options: { headers: { Authorization: string }; params?: { id: string } } = {
+      headers: { Authorization: `Bearer ${password}` }
+    };
+    if (id) {
+      options.params = { id };
+    }
     try {
-      await firstValueFrom(this.http.delete('/.netlify/functions/asistencias', {
-        headers: { Authorization: `Bearer ${password}` },
-        params
-      }));
+      await firstValueFrom(this.http.delete('/.netlify/functions/asistencias', options));
     } catch (error: any) {
       throw new Error(error.error?.error ?? 'No se pudieron borrar las confirmaciones.');
     }
